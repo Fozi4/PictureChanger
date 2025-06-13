@@ -1,20 +1,4 @@
 import cv2, os
-# from tkinter import Tk
-# from tkinter.filedialog import askopenfilename as file
-
-# def get_user_img():
-#     choice = input("Choose method for giving an img: [1] - File dialog (recommended) / [2] - Manual path (1/2):  ")
-#     if choice == "1":
-#         return choose_file()
-#     elif choice == "2":
-#         return input("Enter a full path to image: ")    
-#     else:
-#         print("Invalid choose.")
-#         return
-# def choose_file():
-#     Tk().withdraw()
-#     filename = file(title="Choose an image file", filetypes=[("images files", "*.jpg *.png *.jpeg *.bmp")])
-#     return filename
 
 def load_image(path):
     img = cv2.imread(path)
