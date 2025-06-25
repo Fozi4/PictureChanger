@@ -1,67 +1,17 @@
-import cv2, os
+from filters import *
 
 def load_image(path):
     img = cv2.imread(path)
+    global original
+    original = img
     if img is None:
         raise FileNotFoundError("Image is not found")
     return cv2.resize(img,(400,400))
 
-def gray_image(img):
-    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-
-def colored_image(img):
-    print("Available color mods: rgb, hsv, lab, ycrcb, xyz, luv")
-    colored_input = input("Enter color mode: ").lower()
-    color_modes = {
-        "rgb": cv2.COLOR_BGR2RGB,
-        "hsv": cv2.COLOR_BGR2HSV,
-        "lab": cv2.COLOR_BGR2LAB,
-        "ycrcb": cv2.COLOR_BGR2YCrCb,
-        "xyz": cv2.COLOR_BGR2XYZ,
-        "luv": cv2.COLOR_BGR2LUV
-    }
-    if colored_input in color_modes:
-        return cv2.cvtColor(img, color_modes[colored_input])
-    else:
-        print("Invalid choice. Returning original image.")
-        return img
-
-def colormap_image(img):
-    print("Available colormaps: Jet, Hot, Cool")
-    cmap_input = input("Enter colormap type: ").upper()
-    cmap_dict = {
-        "JET": cv2.COLORMAP_JET,
-        "HOT": cv2.COLORMAP_HOT,
-        "COOL": cv2.COLORMAP_COOL
-    }
-    if cmap_input in cmap_dict:
-        return cv2.applyColorMap(img, cmap_dict[cmap_input])
-    else:
-        print("Invalid choice. Returning oryginal img")
-        return img
-
-def apply_sobel(gray):
-    x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
-    y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
-    return cv2.magnitude(x, y)
-
-def subtract_image(img1,img2):
-    return cv2.subtract(img1,img2)
-
-def blur_image(img):
-    return cv2.GaussianBlur(img,(5,5), 50)
-
 def save_output(name, img):
     os.makedirs("outputs", exist_ok=True)
     cv2.imwrite(f"outputs/{name}.jpg", img)
-
-def show(title, img):
-    cv2.imshow(title, img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
+    
 def main():
     path = input("Enter full image path (e.g. C:/Users/user/Desktop/photo.jpg): ")
     try:
@@ -70,37 +20,48 @@ def main():
     except FileNotFoundError:
         print("Image not found.")
         return
-    run = True
-    while run:
-        start = input("What would you like to do with image? (gray, colored, colormaped, subtracted, blurred, sobel, s to stop): ").lower()
-        match start:
-            case "gray":
-                result = gray_image(img1)
-            case "colored":
-                result = colored_image(img1)
-            case "colormaped":
-                result = colormap_image(img1)
-            case "subtracted":
-                colored = colored_image(img1)
-                result = subtract_image(colored, img1)
-            case "blurred":
-                result =blur_image(img1)
-            case "sobel":
-                gray = gray_image(img1)
-                result = apply_sobel(gray)
-            case "s":
-                run = False
-                continue
-            case _:
-                print("Choose from the available options.")
-                continue
-            
+        
+    options = {
+    1: lambda img: gray_image(img),
+    2: lambda img: colored_image(img),
+    3: lambda img: colormap_image(img),
+    4: lambda img: subtract(img),
+    5: lambda img: blur_image(img),
+    6: lambda img: apply_sobel(gray_image(img)),
+    7: lambda img: original.copy()
+    }
+    while True:
+        print("""
+Choose operation:
+[1] Convert to Grayscale
+[2] Apply Color Mode
+[3] Apply Colormap
+[4] Subtract
+[5] Blur Image
+[6] Apply Sobel
+[7] Reset to original
+[0] Exit
+        """)
+        
+        try:
+            choose = int(input(""))
+        except ValueError:
+            print("Please enter a number")
+        if choose == 0:
+            print("Exiting")
+            break
+        if choose not in options:
+            print("Invalid choice. Try again.")
+            continue
+        
+        result = options[choose](result)
+        
         if result is not None:
-            show(start.capitalize(), result)
+            show("img",result)
             save = input("Do you want to save the result? (yes/no): ").lower()
-            if save == "yes":
-                name = input("Enter filename (without extension): ")
-                save_output(name, result)
-
-
+        
+        if save == "yes":
+            name = input("Enter filename (without extension): ")
+            save_output(name, result)
+         
 main()
